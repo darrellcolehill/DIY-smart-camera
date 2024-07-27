@@ -11,23 +11,24 @@
     <video id="video" width="640" height="480" controls autoplay></video>
 
     <script>
-        if (Hls.isSupported()) {
+        document.addEventListener('DOMContentLoaded', function () {
             var video = document.getElementById('video');
-            var hls = new Hls({
-                liveSyncDuration: 1.5, // Adjust this based on segment duration
-                liveMaxLatency: 2,     // Maximum latency in seconds
-            });
-            hls.loadSource('http://localhost:8000/stream.m3u8');
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play();
-            });
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = 'http://localhost:8000/stream.m3u8';
-            video.addEventListener('canplay', function() {
-                video.play();
-            });
-        }
+            var streamUrl = 'https://c717-38-27-127-34.ngrok-free.app/stream.m3u8';
+
+            if (Hls.isSupported()) {
+                var hls = new Hls();
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play();
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = streamUrl;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play();
+                });
+            }
+        });
     </script>
 </body>
 </html>
