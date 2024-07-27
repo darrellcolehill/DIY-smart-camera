@@ -28,3 +28,4 @@ python -m http.server 8000
 - [ ] Decrease video latency. See if I can combine the old ffmpeg command with the current ffmpeg command
 - [ ] Set up testing environment without ngrok by just hardcoding computer IP
 - [ ] Write script to grab ngrok https IP and do the copy/paste for me
+- [ ] Figure out how to use openCV with video stream and not just a hardcoded image
