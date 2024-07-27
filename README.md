@@ -23,6 +23,9 @@ python -m http.server 8000
    * cd into videoStreaming
    * Run ffmpeg -f dshow -rtbufsize 100M -i video="HD Webcam" -pix_fmt yuv420p -c:v libx264 -preset veryfast -f hls -hls_time 1 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename "segment_%03d.ts" stream.m3u8
    * Run python -m http.server 8000
+   * Open android emulator
+   * cd into DIY-smart-camera (expo app)
+   * run npm run android
 
 ## TODO
 - [ ] Decrease video latency. See if I can combine the old ffmpeg command with the current ffmpeg command
