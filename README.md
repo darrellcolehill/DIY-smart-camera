@@ -17,7 +17,7 @@ ffmpeg -f dshow -rtbufsize 100M -i video="HD Webcam" -pix_fmt yuv420p -c:v libx2
 ## Streaming command (in hsl_stream)
 python -m http.server 8000
 
-## Current testing environment (buckle in, it's all over the place)
+## Setting up testing environment (the long way)
    * Run ngrok http http://localhost:8000
    * Copy the given https link to testUI and App.tsx
    * cd into videoStreaming
@@ -27,9 +27,14 @@ python -m http.server 8000
    * cd into DIY-smart-camera (expo app)
    * run npm run android
 
+## Setting up testing environment (the short way)
+   * Run python testEnvSetup.py
+   * run npm run android
+
 ## TODO
 - [ ] Decrease video latency. See if I can combine the old ffmpeg command with the current ffmpeg command
 - [ ] Set up testing environment without ngrok by just hardcoding computer IP
 - [ ] Write script to grab ngrok https IP and do the copy/paste for me
-- [ ] Automate testing environment setup
+- [X] Automate testing environment setup
+- [ ] Experiment with viewing stream html file through email link
 - [ ] Figure out how to use openCV with video stream and not just a hardcoded image
