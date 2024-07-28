@@ -38,3 +38,5 @@ python -m http.server 8000
 - [X] Automate testing environment setup
 - [ ] Experiment with viewing stream html file through email link
 - [ ] Figure out how to use openCV with video stream and not just a hardcoded image
+- [ ] Stream video from RPI to local computer using openCV video streaming and flask
+- [ ] Figure out if ffmpeg or OpenCV/Flask is faster for streaming to phone
