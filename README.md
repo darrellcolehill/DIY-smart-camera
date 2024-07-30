@@ -29,6 +29,7 @@ python -m http.server 8000
 
 ## Setting up testing environment (the short way)
    * Run python testEnvSetup.py
+   * cd into app
    * run npm run android
 
 ## TODO
