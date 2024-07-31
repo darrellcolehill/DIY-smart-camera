@@ -37,7 +37,7 @@ python -m http.server 8000
 - [ ] Set up testing environment without ngrok by just hardcoding computer IP
 - [X] Write script to grab ngrok https IP and do the copy/paste for me
 - [X] Automate testing environment setup
-- [ ] Experiment with viewing stream html file through email link
-- [ ] Figure out how to use openCV with video stream and not just a hardcoded image
+- [X] Experiment with viewing stream html file through email link
+- [X] Figure out how to use openCV with video stream and not just a hardcoded image
 - [ ] Stream video from RPI to local computer using openCV video streaming and flask
 - [ ] Figure out if ffmpeg or OpenCV/Flask is faster for streaming to phone
