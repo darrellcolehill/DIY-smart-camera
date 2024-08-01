@@ -3,6 +3,10 @@ import time
 import json
 import os
 import argparse
+import io
+import qrcode
+import socket
+
 
 def start_ngrok(port, ngrok_path):
     # Start ngrok process
@@ -68,6 +72,31 @@ def stop_ffmpeg(ffmpeg_server):
     except Exception as e:
         print(f"An error occurred while trying to terminate FFmpeg: {e}")
 
+def get_ipv4_address():
+    try:
+        # Create a socket object
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        
+        # Connect to an external server. Doesn't matter if the server is reachable or not.
+        s.connect(("8.8.8.8", 80))
+        
+        # Get the IPv4 address of the local machine
+        ipv4_address = s.getsockname()[0]
+        
+        # Close the socket
+        s.close()
+        
+        return ipv4_address
+    except Exception as e:
+        return f"Error: {e}"
+
+def printURLQrCode(url): 
+    qr = qrcode.QRCode()
+    qr.add_data(url)
+    f = io.StringIO()
+    qr.print_ascii(out=f)
+    f.seek(0)
+    print(f.read())
 
 
 if __name__ == "__main__":
@@ -83,10 +112,12 @@ if __name__ == "__main__":
     if not skip_ngrok:
         ngrok, ngrok_url = start_ngrok(port, ngrok_path)
         stream_url = ngrok_url + '/ffmpeg/stream.m3u8'
+        printURLQrCode(ngrok_url)
     else:
-        stream_url = f'http://localhost:{port}/ffmpeg/stream.m3u8'
-    
-    
+        ip = get_ipv4_address()
+        printURLQrCode(f'http://{ip}:{port}')
+        stream_url = f'http://{ip}:{port}/ffmpeg/stream.m3u8'
+
     template_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStreamTemplate.html'
     output_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStream.html'
     update_html_file(template_path, output_path, stream_url)
