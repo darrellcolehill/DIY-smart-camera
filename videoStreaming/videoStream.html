@@ -13,7 +13,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var video = document.getElementById('video');
-            var streamUrl = 'http://localhost:8000/ffmpeg/stream.m3u8';
+            var streamUrl = 'http://172.16.21.83:8000/ffmpeg/stream.m3u8';
 
             if (Hls.isSupported()) {
                 var hls = new Hls();
