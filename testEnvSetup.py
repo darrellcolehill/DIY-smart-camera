@@ -2,6 +2,7 @@ import subprocess
 import time
 import json
 import os
+import argparse
 
 def start_ngrok(port, ngrok_path):
     # Start ngrok process
@@ -53,36 +54,57 @@ def start_ffmpeg_server(directory, ffmpeg_command):
     ffmpeg_server = subprocess.Popen(ffmpeg_command, shell=True)
     return ffmpeg_server
 
+
+def stop_ffmpeg(ffmpeg_server):
+    try:
+        # Send termination signal
+        ffmpeg_server.terminate()
+        # Allow some time for graceful termination
+        time.sleep(2)
+        # Forcefully kill the process if it's still running
+        if ffmpeg_server.poll() is None:
+            ffmpeg_server.kill()
+        ffmpeg_server.wait()  # Wait for the process to terminate
+    except Exception as e:
+        print(f"An error occurred while trying to terminate FFmpeg: {e}")
+
+
+
 if __name__ == "__main__":
-    port = 8000  # Change this to the port you want to forward
-    ngrok_path = "C:\\Users\\Darrell\\Downloads\\ngrok-v3-stable-windows-amd64 (1)\\ngrok.exe"  # Replace this with the actual path to ngrok.exe
+
+    parser = argparse.ArgumentParser(description="Start video streaming with ngrok, HTTP server, and FFmpeg.")
+    parser.add_argument("--skip_ngrok", action='store_true', help="Skip running ngrok if specified.")
+    args = parser.parse_args()
+    skip_ngrok = args.skip_ngrok
+
+    port = 8000 
+    ngrok_path = "C:\\Users\\Darrell\\Downloads\\ngrok-v3-stable-windows-amd64 (1)\\ngrok.exe" 
+
+    if not skip_ngrok:
+        ngrok, ngrok_url = start_ngrok(port, ngrok_path)
+        stream_url = ngrok_url + '/ffmpeg/stream.m3u8'
+    else:
+        stream_url = f'http://localhost:{port}/ffmpeg/stream.m3u8'
     
-    ngrok, ngrok_url = start_ngrok(port, ngrok_path)
-    stream_url = ngrok_url + '/stream.m3u8'
     
-    template_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStreamTemplate.html'  # Path to your HTML template file
-    output_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStream.html'  # Path to your output HTML file
+    template_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStreamTemplate.html'
+    output_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStream.html'
     update_html_file(template_path, output_path, stream_url)
 
-    # Start HTTP server
     video_streaming_dir = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming'
     http_server = start_http_server(video_streaming_dir, port)
 
-    # Example FFmpeg command (customize as needed)
     ffmpeg_command = 'ffmpeg -f dshow -rtbufsize 100M -i video="HD Webcam" -pix_fmt yuv420p -c:v libx264 -preset veryfast -f hls -hls_time 1 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename "segment_%03d.ts" stream.m3u8'
-    ffmpeg_server = start_ffmpeg_server(video_streaming_dir, ffmpeg_command)
-    
-    print(f"Updated HTML file with stream URL: {ngrok_url}")
-    
+    ffmpeg_server = start_ffmpeg_server(f'{video_streaming_dir}\\ffmpeg', ffmpeg_command)
+        
     input("Press Enter to stop ngrok...")
     
-    stop_ngrok(ngrok)
+    if not skip_ngrok:
+        stop_ngrok(ngrok)
     
-    # Stop HTTP server
     http_server.terminate()
     
-    # Stop FFmpeg server
-    ffmpeg_server.terminate()
+    stop_ffmpeg(ffmpeg_server)
 
     print("Ngrok, HTTP server, and FFmpeg server have been stopped.")
 

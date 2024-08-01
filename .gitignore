@@ -1,3 +1,4 @@
 objectDetection/yolov3.weights
 objectDetection/yolov3.cfg
 objectDetection/coco.names
+videoStreaming/ffmpeg/*
