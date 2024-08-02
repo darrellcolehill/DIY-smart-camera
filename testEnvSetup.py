@@ -6,6 +6,9 @@ import argparse
 import io
 import qrcode
 import socket
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def start_ngrok(port, ngrok_path):
@@ -50,7 +53,7 @@ def stop_ngrok(ngrok):
 
 def start_http_server(directory, port):
     os.chdir(directory)
-    http_server = subprocess.Popen(['python', '-m', 'http.server', str(port)])
+    http_server = subprocess.Popen(['python3', '-m', 'http.server', str(port)])
     return http_server
 
 def start_ffmpeg_server(directory, ffmpeg_command):
@@ -106,8 +109,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     skip_ngrok = args.skip_ngrok
 
-    port = 8000 
-    ngrok_path = "C:\\Users\\Darrell\\Downloads\\ngrok-v3-stable-windows-amd64 (1)\\ngrok.exe" 
+    port = os.getenv('PORT') 
+    ngrok_path = os.getenv('NGROK_PATH') 
+    webcam_name = os.getenv('WEBCAM_NAME')
 
     if not skip_ngrok:
         ngrok, ngrok_url = start_ngrok(port, ngrok_path)
@@ -118,14 +122,18 @@ if __name__ == "__main__":
         printURLQrCode(f'http://{ip}:{port}')
         stream_url = f'http://{ip}:{port}/ffmpeg/stream.m3u8'
 
-    template_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStreamTemplate.html'
-    output_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStream.html'
+    ip = get_ipv4_address()
+    printURLQrCode(f'http://{ip}:{port}')
+    stream_url = f'http://{ip}:{port}/ffmpeg/stream.m3u8'
+
+    template_path = './videoStreaming/videoStreamTemplate.html'
+    output_path = './videoStreaming/videoStream.html'
     update_html_file(template_path, output_path, stream_url)
 
-    video_streaming_dir = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming'
+    video_streaming_dir = './videoStreaming'
     http_server = start_http_server(video_streaming_dir, port)
 
-    ffmpeg_command = 'ffmpeg -f dshow -rtbufsize 100M -i video="HD Webcam" -pix_fmt yuv420p -c:v libx264 -preset veryfast -f hls -hls_time 1 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename "segment_%03d.ts" stream.m3u8'
+    ffmpeg_command = f'ffmpeg -f dshow -rtbufsize 100M -i video="{webcam_name}" -pix_fmt yuv420p -c:v libx264 -preset veryfast -f hls -hls_time 1 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename "segment_%03d.ts" stream.m3u8'
     ffmpeg_server = start_ffmpeg_server(f'{video_streaming_dir}\\ffmpeg', ffmpeg_command)
         
     input("Press Enter to stop ngrok...")

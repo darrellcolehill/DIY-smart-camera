@@ -3,3 +3,5 @@ objectDetection/yolov3.cfg
 objectDetection/coco.names
 videoStreaming/ffmpeg/*
 videoStreaming/videoStream.html
+.env
+myenv
