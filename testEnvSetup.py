@@ -6,6 +6,17 @@ import argparse
 import io
 import qrcode
 import socket
+import signal
+import sys
+from dotenv import load_dotenv
+
+load_dotenv()
+
+port = os.getenv('PORT') 
+ngrok_path = os.getenv('NGROK_PATH') 
+webcam_name = os.getenv('WEBCAM_NAME')
+ffmpeg_command = os.getenv('FFMPEG_COMMAND')
+http_server_python_version = os.getenv('HTTP_SERVER_PYTHON_VERSION')
 
 
 def start_ngrok(port, ngrok_path):
@@ -49,15 +60,19 @@ def stop_ngrok(ngrok):
         print(f"An error occurred while trying to terminate the process: {e}")
 
 def start_http_server(directory, port):
-    os.chdir(directory)
-    http_server = subprocess.Popen(['python', '-m', 'http.server', str(port)])
+    http_server = subprocess.Popen([http_server_python_version, '-m', 'http.server', str(port)], cwd=directory)
     return http_server
 
 def start_ffmpeg_server(directory, ffmpeg_command):
-    os.chdir(directory)
-    ffmpeg_server = subprocess.Popen(ffmpeg_command, shell=True)
-    return ffmpeg_server
-
+    try:
+        ffmpeg_server = subprocess.Popen(ffmpeg_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=directory)
+        stdout, stderr = ffmpeg_server.communicate()
+        print("FFmpeg Output:", stdout.decode())
+        print("FFmpeg Errors:", stderr.decode())
+        return ffmpeg_server
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
 def stop_ffmpeg(ffmpeg_server):
     try:
@@ -98,16 +113,31 @@ def printURLQrCode(url):
     f.seek(0)
     print(f.read())
 
+# Signal handler for graceful shutdown
+def signal_handler(sig, frame):
+    global http_server, ffmpeg_server, ngrok, skip_ngrok
+    if not skip_ngrok:
+        stop_ngrok(ngrok)
+    if http_server:
+        http_server.terminate()
+        http_server.wait()  # Ensure it's fully terminated
+    if ffmpeg_server:
+        stop_ffmpeg(ffmpeg_server)
+    print("Ngrok, HTTP server, and FFmpeg server have been stopped.")
+    sys.exit(0)
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Start video streaming with ngrok, HTTP server, and FFmpeg.")
     parser.add_argument("--skip_ngrok", action='store_true', help="Skip running ngrok if specified.")
     args = parser.parse_args()
     skip_ngrok = args.skip_ngrok
 
-    port = 8000 
-    ngrok_path = "C:\\Users\\Darrell\\Downloads\\ngrok-v3-stable-windows-amd64 (1)\\ngrok.exe" 
+    # Register signal handler
+    signal.signal(signal.SIGINT, signal_handler)
+
+    http_server = None
+    ffmpeg_server = None
+    ngrok = None
 
     if not skip_ngrok:
         ngrok, ngrok_url = start_ngrok(port, ngrok_path)
@@ -115,27 +145,27 @@ if __name__ == "__main__":
         printURLQrCode(ngrok_url)
     else:
         ip = get_ipv4_address()
-        printURLQrCode(f'http://{ip}:{port}')
         stream_url = f'http://{ip}:{port}/ffmpeg/stream.m3u8'
+        printURLQrCode(f'http://{ip}:{port}')
 
-    template_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStreamTemplate.html'
-    output_path = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming\\videoStream.html'
+    # Update HTML file with the stream URL
+    template_path = './videoStreaming/videoStreamTemplate.html'
+    output_path = './videoStreaming/videoStream.html'
     update_html_file(template_path, output_path, stream_url)
 
-    video_streaming_dir = 'C:\\Users\\Darrell\\Documents\\GitHub\\DIY-smart-camera\\videoStreaming'
+    video_streaming_dir = './videoStreaming'
     http_server = start_http_server(video_streaming_dir, port)
 
-    ffmpeg_command = 'ffmpeg -f dshow -rtbufsize 100M -i video="HD Webcam" -pix_fmt yuv420p -c:v libx264 -preset veryfast -f hls -hls_time 1 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename "segment_%03d.ts" stream.m3u8'
-    ffmpeg_server = start_ffmpeg_server(f'{video_streaming_dir}\\ffmpeg', ffmpeg_command)
-        
+    ffmpeg_server = start_ffmpeg_server(f'./videoStreaming/ffmpeg', ffmpeg_command)
+
     input("Press Enter to stop ngrok...")
-    
+
     if not skip_ngrok:
         stop_ngrok(ngrok)
-    
-    http_server.terminate()
-    
-    stop_ffmpeg(ffmpeg_server)
+    if http_server:
+        http_server.terminate()
+        http_server.wait()
+    if ffmpeg_server:
+        stop_ffmpeg(ffmpeg_server)
 
     print("Ngrok, HTTP server, and FFmpeg server have been stopped.")
-

@@ -1,0 +1,4 @@
+{
+    "python.defaultInterpreterPath": "myenv/bin/python",
+    "editor.formatOnSave": true
+}
