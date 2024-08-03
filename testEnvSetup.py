@@ -143,13 +143,10 @@ if __name__ == "__main__":
         printURLQrCode(ngrok_url)
     else:
         ip = get_ipv4_address()
-        printURLQrCode(f'http://{ip}:{port}')
         stream_url = f'http://{ip}:{port}/ffmpeg/stream.m3u8'
+        printURLQrCode(f'http://{ip}:{port}')
 
-    ip = get_ipv4_address()
-    printURLQrCode(f'http://{ip}:{port}')
-    stream_url = f'http://{ip}:{port}/ffmpeg/stream.m3u8'
-
+    # Update HTML file with the stream URL
     template_path = './videoStreaming/videoStreamTemplate.html'
     output_path = './videoStreaming/videoStream.html'
     update_html_file(template_path, output_path, stream_url)
