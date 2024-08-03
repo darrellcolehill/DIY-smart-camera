@@ -52,14 +52,20 @@ def stop_ngrok(ngrok):
         print(f"An error occurred while trying to terminate the process: {e}")
 
 def start_http_server(directory, port):
-    os.chdir(directory)
-    http_server = subprocess.Popen(['python3', '-m', 'http.server', str(port)])
+    http_server = subprocess.Popen(['python3', '-m', 'http.server', str(port)], cwd=directory)
     return http_server
 
 def start_ffmpeg_server(directory, ffmpeg_command):
-    os.chdir(directory)
-    ffmpeg_server = subprocess.Popen(ffmpeg_command, shell=True)
-    return ffmpeg_server
+    try:
+        ffmpeg_server = subprocess.Popen(ffmpeg_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=directory)
+        stdout, stderr = ffmpeg_server.communicate()
+        print("FFmpeg Output:", stdout.decode())
+        print("FFmpeg Errors:", stderr.decode())
+        return ffmpeg_server
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
 
 
 def stop_ffmpeg(ffmpeg_server):
@@ -133,8 +139,8 @@ if __name__ == "__main__":
     video_streaming_dir = './videoStreaming'
     http_server = start_http_server(video_streaming_dir, port)
 
-    ffmpeg_command = f'ffmpeg -f dshow -rtbufsize 100M -i video="{webcam_name}" -pix_fmt yuv420p -c:v libx264 -preset veryfast -f hls -hls_time 1 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename "segment_%03d.ts" stream.m3u8'
-    ffmpeg_server = start_ffmpeg_server(f'{video_streaming_dir}\\ffmpeg', ffmpeg_command)
+    ffmpeg_command = f'ffmpeg -f v4l2 -rtbufsize 100M -i /dev/video0 -pix_fmt yuv420p -c:v libx264 -preset veryfast -f hls -hls_time 1 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename "segment_%03d.ts" stream.m3u8'
+    ffmpeg_server = start_ffmpeg_server(f'./videoStreaming/ffmpeg', ffmpeg_command)
         
     input("Press Enter to stop ngrok...")
     
