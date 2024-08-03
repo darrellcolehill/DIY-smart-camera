@@ -118,6 +118,7 @@ if __name__ == "__main__":
     port = os.getenv('PORT') 
     ngrok_path = os.getenv('NGROK_PATH') 
     webcam_name = os.getenv('WEBCAM_NAME')
+    ffmpeg_command = os.getenv('FFMPEG_COMMAND')
 
     if not skip_ngrok:
         ngrok, ngrok_url = start_ngrok(port, ngrok_path)
@@ -139,7 +140,6 @@ if __name__ == "__main__":
     video_streaming_dir = './videoStreaming'
     http_server = start_http_server(video_streaming_dir, port)
 
-    ffmpeg_command = f'ffmpeg -f v4l2 -rtbufsize 100M -i /dev/video0 -pix_fmt yuv420p -c:v libx264 -preset veryfast -f hls -hls_time 1 -hls_list_size 5 -hls_flags delete_segments -hls_segment_filename "segment_%03d.ts" stream.m3u8'
     ffmpeg_server = start_ffmpeg_server(f'./videoStreaming/ffmpeg', ffmpeg_command)
         
     input("Press Enter to stop ngrok...")
