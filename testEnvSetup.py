@@ -12,6 +12,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+port = os.getenv('PORT') 
+ngrok_path = os.getenv('NGROK_PATH') 
+webcam_name = os.getenv('WEBCAM_NAME')
+ffmpeg_command = os.getenv('FFMPEG_COMMAND')
+http_server_python_version = os.getenv('HTTP_SERVER_PYTHON_VERSION')
+
+
 def start_ngrok(port, ngrok_path):
     # Start ngrok process
     ngrok = subprocess.Popen([ngrok_path, 'http', str(port)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -53,7 +60,7 @@ def stop_ngrok(ngrok):
         print(f"An error occurred while trying to terminate the process: {e}")
 
 def start_http_server(directory, port):
-    http_server = subprocess.Popen(['python3', '-m', 'http.server', str(port)], cwd=directory)
+    http_server = subprocess.Popen([http_server_python_version, '-m', 'http.server', str(port)], cwd=directory)
     return http_server
 
 def start_ffmpeg_server(directory, ffmpeg_command):
@@ -124,11 +131,6 @@ if __name__ == "__main__":
     parser.add_argument("--skip_ngrok", action='store_true', help="Skip running ngrok if specified.")
     args = parser.parse_args()
     skip_ngrok = args.skip_ngrok
-
-    port = os.getenv('PORT') 
-    ngrok_path = os.getenv('NGROK_PATH') 
-    webcam_name = os.getenv('WEBCAM_NAME')
-    ffmpeg_command = os.getenv('FFMPEG_COMMAND')
 
     # Register signal handler
     signal.signal(signal.SIGINT, signal_handler)
